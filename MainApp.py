@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from ttkthemes import ThemedStyle
+import fileManager as fm
 from fileManager import *
 
 # Class to extend when making new frames for MainApp

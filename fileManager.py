@@ -2,20 +2,24 @@ import os
 import json
 from datetime import datetime
 
-__all__ = ['writeFile', 'readFile', 'deleteFile']
+__all__ = ['getFileList', 'writeFile', 'readFile', 'deleteFile']
+
+__path__ = os.path.expanduser("~")+"/auricular/"
+
+def getFileList():
+    return [file for file in os.listdir(__path__) if os.path.isfile(os.path.join(__path__, file))]
 
 def writeFile(jsonFile):
     now = datetime.now()
     timestamp = now.strftime("%Y.%m.%d-%H.%M.%S")
-    write = open(os.path.expanduser("~")+"/auricular/"+timestamp+".acrai", 'w')
+    write = open(__path__+timestamp+".acrai", 'w')
     jsonFile.update({'time': timestamp})
     json.dump(jsonFile, write)
     pass
 
 def readFile(name):
-    read = open(os.path.expanduser("~")+"/auricular/"+name+".acrai")
-    return json.load(read)
+    return json.load( open(__path__+name) )
 
 def deleteFile(name):
-    os.remove(os.path.expanduser("~")+"/auricular/"+name+".acrai")
+    os.remove(__path__+name)
     pass

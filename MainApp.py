@@ -237,16 +237,16 @@ class OutputFrame(BasicFrame):
             self.frame_in.pack(expand=True, fill="x", pady=20, padx=(20,0))
 
             self.keyword = ttk.Label(self.frame_in, text="Keyword: "+entry[0].capitalize(), style='title.TLabel', wraplength=650)
-            self.keyword.pack(expand=True, fill="x", pady=10, padx=(10,0))
+            self.keyword.pack(expand=True, fill="x", pady=10, padx=10)
 
             self.time = ttk.Label(self.frame_in, text=entry[1][0:10], style='body.TLabel', wraplength=650)
-            self.time.pack(expand=True, fill="x", pady=10, padx=(10,0))
+            self.time.pack(expand=True, fill="x", pady=10, padx=10)
 
             self.context = ttk.Label(self.frame_in, text="Transcript: '"+entry[2].capitalize()+"'", style='body.TLabel', wraplength=650)
-            self.context.pack(expand=True, fill="x", pady=10, padx=(10,0))
+            self.context.pack(expand=True, fill="x", pady=10, padx=10)
 
             self.confi = ttk.Label(self.frame_in, text="AI Accuracy: "+str(int(entry[3]*100))+"%", style='body.TLabel', wraplength=650)
-            self.confi.pack(expand=True, fill="x", pady=10, padx=(10,0))
+            self.confi.pack(expand=True, fill="x", pady=10, padx=10)
         self.scrollbar.pack(side="right", fill="y")
         self.canvas.pack(side="left", expand=True, fill="both")
         self.canvas.create_window((4, 4), window=self.scrollable_frame, anchor="nw")

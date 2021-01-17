@@ -25,9 +25,10 @@ def cosine_interpolate(y1, y2, mu):
    return (y1*(1-mu2) + y2*mu2)
 
 class BackendThread(threading.Thread):
-    def __init__(self, queue):
+    def __init__(self, queue, parent):
         threading.Thread.__init__(self)
         self.queue = queue
+        self.parent = parent
         self.file_name = ''
         pass
     def set_file_name(self, file_name):
@@ -41,7 +42,7 @@ class BackendThread(threading.Thread):
         self.queue.put("3/4:Deleting audio from the cloud")
         AudioUpload.bucketDelete(self.file_name)
         self.queue.put("4/4:Uploading transcripts to wit.ai")
-        WitBackend.sendResponses(transcripts)
+        self.parent.outputFrame.update_widgets( WitBackend.sendResponses(transcripts) )
         self.queue.put("Finished")
         pass
 
@@ -82,7 +83,7 @@ class SplashFrame(BasicFrame):
         for i in range(100):
             self.randompoints.append(random.randint(0, 50))
 
-        self.title = self.canvas.create_text(self.x, self.y, font=("TkMenuFont",self.fontsize), text="Auricular.AI", fill='#FFFFFF')
+        self.title = self.canvas.create_text(self.x, self.y, font=("TkMenuFont",self.fontsize), text="Auricular.ai", fill='#FFFFFF')
         self.oldRect = self.canvas.create_rectangle(0, self.m, 800, 0, outline="#f5f6f7", fill="#f5f6f7")
         pass
 
@@ -102,7 +103,7 @@ class SplashFrame(BasicFrame):
         if self.counter < 300:
             self.fontsize = self.fontsize+0.25  if self.fontsize<75 else self.fontsize
             self.titleColor = self.titleColor-1 if self.titleColor>0 else self.titleColor
-        self.newTitle = self.canvas.create_text(self.x, self.y, font=("TkMenuFont",int(self.fontsize)), text="Auricular.AI", fill=mono_to_hex(self.titleColor))
+        self.newTitle = self.canvas.create_text(self.x, self.y, font=("TkMenuFont",int(self.fontsize)), text="Auricular.ai", fill=mono_to_hex(self.titleColor))
         self.canvas.delete(self.title)
         self.title = self.newTitle
 
@@ -201,6 +202,8 @@ class LoadingFrame(BasicFrame):
             msg = self.parent.queue.get(0)
             if msg == "Finished":
                 self.parent.thread.join()
+                self.hide_window()
+                self.parent.outputFrame.show_window()
             else:
                 self.titleText = msg
 
@@ -218,27 +221,35 @@ class LoadingFrame(BasicFrame):
 
 # Screen to show what happened and stuff
 class OutputFrame(BasicFrame):
-    def add_info(self, data):
-        self.info = data
-        pass
     def create_widgets(self):
         self.canvas = tk.Canvas(self, borderwidth=0, background="#f5f6f7")
         self.scrollable_frame = ttk.Frame(self.canvas, borderwidth=0)
         self.scrollbar = ttk.Scrollbar(self, orient='vertical', command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        self.scrollable_frame.bind("<Configure>", self.onFrameConfigure)
+        self.backButton = ttk.Button(self, text="Go Back", style='main.TButton', command=lambda:[self.hide_window(), self.parent.mainFrame.show_window()])
+        self.backButton.pack(side="bottom", pady=10)
+        pass
+    def update_widgets(self, data):
+        for entry in data:
+            self.frame_in = tk.Frame(self.scrollable_frame, bg="#f5f6f7")
+            self.frame_in.config(highlightthickness=2,highlightbackground="#5294E2")
+            self.frame_in.pack(expand=True, fill="x", pady=20, padx=(20,0))
 
-        for i in self.info:
-            self.frame_in = ttk.Frame(self.scrollable_frame)
-            self.frame_in.pack(side="top", expand=True, fill="x", pady=20)
-            self.time = ttk.Label(self.frame_in, text=self.info[0][0])
-            self.keyword = ttk.Label(self.frame_in, text=self.info[0][1])
-            self.confi = ttk.Label(self.frame_in, text=self.info[0][2])
-            self.context = ttk.Label(self.frame_in, text=self.info[0][3])
+            self.keyword = ttk.Label(self.frame_in, text="Keyword: "+entry[0].capitalize(), style='title.TLabel', wraplength=690)
+            self.keyword.pack(expand=True, fill="x", pady=10, padx=(10,0))
 
+            self.time = ttk.Label(self.frame_in, text=entry[1][0:10], style='body.TLabel', wraplength=690)
+            self.time.pack(expand=True, fill="x", pady=10, padx=(10,0))
+
+            self.context = ttk.Label(self.frame_in, text="Transcript: '"+entry[2].capitalize()+"'", style='body.TLabel', wraplength=690)
+            self.context.pack(expand=True, fill="x", pady=10, padx=(10,0))
+
+            self.confi = ttk.Label(self.frame_in, text="AI Accuracy: "+str(int(entry[3]*100))+"%", style='body.TLabel', wraplength=690)
+            self.confi.pack(expand=True, fill="x", pady=10, padx=(10,0))
         self.scrollbar.pack(side="right", fill="y")
         self.canvas.pack(side="left", expand=True, fill="both")
         self.canvas.create_window((4, 4), window=self.scrollable_frame, anchor="nw")
-        self.scrollable_frame.bind("<Configure>", self.onFrameConfigure)
         pass
     def onFrameConfigure(self, event):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
@@ -251,7 +262,7 @@ class OutputFrame(BasicFrame):
 class MainApp(object):
     def __init__(self):
         self.queue = queue.Queue()
-        self.thread = BackendThread(self.queue)
+        self.thread = BackendThread(self.queue, self)
 
         self.root = tk.Tk()
         self.root.title("Auricular.ai")
@@ -262,19 +273,19 @@ class MainApp(object):
         self.style.set_theme("arc")
 
         self.ttkstyle = ttk.Style()
-        self.ttkstyle.configure('heading.TLabel', font='TkDefaultFont 48')
-        self.ttkstyle.configure('main.TButton', font='TkMenuFont 18')
+        self.ttkstyle.configure('heading.TLabel', font='TkDefaultFont 48', foreground="#5294E2")
+        self.ttkstyle.configure('title.TLabel', font='TkDefaultFont 16 bold')
+        self.ttkstyle.configure('body.TLabel', font='TkDefaultFont 16')
+        self.ttkstyle.configure('main.TButton', font='TkMenuFont 16', foreground="#5294E2")
 
         self.splashFrame = SplashFrame(self.root, self)
         self.mainFrame = MainFrame(self.root, self)
         self.loadFrame = LoadingFrame(self.root, self)
         self.outputFrame = OutputFrame(self.root, self)
 
-        self.outputFrame.show_window()
-
-        #self.splashFrame.show_window()
-        #self.splashFrame.reset_animation()
-        #self.splashFrame.run_animation()
+        self.splashFrame.show_window()
+        self.splashFrame.reset_animation()
+        self.splashFrame.run_animation()
         pass
 
 mainApp = MainApp()

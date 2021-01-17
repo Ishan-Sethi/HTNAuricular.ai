@@ -1,5 +1,9 @@
 import json
 from wit import Wit
+import datetime
+
+def pretty_print(response_json: json):
+    print(json.dumps(response_json, indent=4, sort_keys=True))
 
 def sendResponses(responses):
     print("Sending transcripts to wit.ai")
@@ -11,20 +15,10 @@ def sendResponses(responses):
             if len(phrase) <= 280:
                 response = client.message(phrase)
                 data.append(response)
-    intent_only = []
-    for sentence in data:
-        if sentence['intents']:
-            text = sentence['text']
-            aricule = []
-            dates = []
-            if 'htn_auricule:htn_auricule' in sentence['entities']:
-                for entities in sentence['entities']['htn_auricule:htn_auricule']:
-                    ariculi = dict(body=entities['body'], confidence=entities['confidence'])
-                    aricule.append(ariculi)
-            if 'wit$datetime:datetime' in sentence['entities']:
-                for entities in sentence['entities']['wit$datetime:datetime']:
-                    date = dict(body=entities['body'], confidence=entities['confidence'], value=entities['value'])
-                    dates.append(date)
-            final_data = [text, aricule, dates]
-            intent_only.append(json.dumps(final_data))
-    return intent_only
+    for jsonresponse in data:
+        if 'wit$datetime:datetime' in jsonresponse['entities'] and 'htn_auricule:htn_auricule' in jsonresponse['entities'] and jsonresponse['entities']['wit$datetime:datetime'][0]['type'] != 'interval':
+            print(jsonresponse['entities']['wit$datetime:datetime'][0]["value"])
+            print(jsonresponse['entities']['htn_auricule:htn_auricule'][0]["value"])
+            print(jsonresponse['entities']['htn_auricule:htn_auricule'][0]["confidence"])
+            print(jsonresponse["text"])
+            print("")

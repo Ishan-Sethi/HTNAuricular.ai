@@ -3,7 +3,7 @@ from google.cloud import storage
 from google.oauth2 import service_account
 from pydub import AudioSegment
 import wave
-credentials = service_account.Credentials.from_service_account_file("B:/Users/Documents/auricular-ai-2edefb9bcdf3.json") # change to credentials
+credentials = service_account.Credentials.from_service_account_file("C:/Users/Ishan/Downloads/auricular-ai-2edefb9bcdf3.json") # change to credentials
 
 def stereoToMono(fileName):
     audio = AudioSegment.from_wav(fileName)

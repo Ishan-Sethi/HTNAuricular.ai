@@ -135,8 +135,6 @@ class MainFrame(BasicFrame):
         self.heading.pack(side="top", pady=(80,30))
         self.record = ttk.Button(self, text="Process Recording", width=25, style="main.TButton", command=self.get_file_location)
         self.record.pack(side="top", pady=(50,0))
-        self.note = ttk.Button(self, text="Notes", width=25, style="main.TButton", command=lambda:[self.hide_window(),self.parent.notesFrame.show_window()])
-        self.note.pack(side="top", pady=(30,0))
         self.quit = ttk.Button(self, text="Quit Program", width=25, style="main.TButton", command=self.parent.root.destroy)
         self.quit.pack(side="top", pady=(30,0))
         pass
@@ -220,15 +218,22 @@ class LoadingFrame(BasicFrame):
 
 # Screen to show what happened and stuff
 class OutputFrame(BasicFrame):
+    def add_info(self, data):
+        self.info = data
+        pass
     def create_widgets(self):
         self.canvas = tk.Canvas(self, borderwidth=0, background="#f5f6f7")
         self.scrollable_frame = ttk.Frame(self.canvas, borderwidth=0)
         self.scrollbar = ttk.Scrollbar(self, orient='vertical', command=self.canvas.yview)
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
-        for i in range(30):
-            self.button1 = ttk.Button(self.scrollable_frame, text="bruh", width=20)
-            self.button1.pack(ipady=30)
+        for i in self.info:
+            self.frame_in = ttk.Frame(self.scrollable_frame)
+            self.frame_in.pack(side="top", expand=True, fill="x", pady=20)
+            self.time = ttk.Label(self.frame_in, text=self.info[0][0])
+            self.keyword = ttk.Label(self.frame_in, text=self.info[0][1])
+            self.confi = ttk.Label(self.frame_in, text=self.info[0][2])
+            self.context = ttk.Label(self.frame_in, text=self.info[0][3])
 
         self.scrollbar.pack(side="right", fill="y")
         self.canvas.pack(side="left", expand=True, fill="both")
@@ -240,17 +245,6 @@ class OutputFrame(BasicFrame):
         pass
     def show_window(self):
         self.pack(side="top", fill="both", padx=10, pady=10, expand=True)
-        pass
-
-# Show all saved notes and open em up
-class NotesFrame(BasicFrame):
-    def create_widgets(self):
-        self.back = ttk.Button(self, text="Back", width=25, command=lambda:[self.hide_window(),self.parent.mainFrame.show_window()])
-        self.back.pack(side="bottom", pady=(0,100))
-        pass
-
-    def show_window(self):
-        self.pack(side="top", fill="both", ipadx=30, ipady=30, expand=True)
         pass
 
 # Main Window Class
@@ -273,7 +267,6 @@ class MainApp(object):
 
         self.splashFrame = SplashFrame(self.root, self)
         self.mainFrame = MainFrame(self.root, self)
-        self.notesFrame = NotesFrame(self.root, self)
         self.loadFrame = LoadingFrame(self.root, self)
         self.outputFrame = OutputFrame(self.root, self)
 

@@ -5,8 +5,8 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from ttkthemes import ThemedStyle
-import fileManager as fm
-from fileManager import *
+import FileManager as fm
+from FileManager import *
 
 # helper to turn rgb to hex
 def rgb_to_hex(r,g,b):
@@ -43,7 +43,6 @@ class SplashFrame(BasicFrame):
     def create_widgets(self):
         self.canvas = tk.Canvas(self, width=800, height=500)
         self.canvas.pack()
-        print("function has run create")
         pass
 
     def reset_animation(self):
@@ -59,24 +58,21 @@ class SplashFrame(BasicFrame):
 
         self.title = self.canvas.create_text(self.x, self.y, font=("TkMenuFont",self.fontsize), text="Auricular.AI", fill='#FFFFFF')
         self.oldRect = self.canvas.create_rectangle(0, self.m, 800, 0, outline="#f5f6f7", fill="#f5f6f7")
-
-        print("function has run")
         pass
 
     def run_animation(self):
-        print(self.counter)
-
-        #Sinusoidal wave drawing
+        #Main counter for animation
         self.counter+=1
 
+        #Sinusoidal wave drawing
         if self.counter % 50 == 0:
             self.index+=1
-
         if self.counter%2==0:
             self.sinx+=2
             self.siny = cosineInterpolate(self.randompoints[self.index], self.randompoints[self.index+1], (self.counter%50)/50)*math.sin(self.sinx)
-            self.canvas.create_line(self.sinx, 250-self.siny, self.sinx, 250+self.siny, width=2, fill=rgb_to_hex(160,160,255))
+            self.canvas.create_line(self.sinx, 250-self.siny, self.sinx, 250+self.siny, width=2, fill="#CFD6E6")
 
+        #Main text drawing
         if self.counter < 300:
             self.fontsize = self.fontsize+0.25  if self.fontsize<75 else self.fontsize
             self.titleColor = self.titleColor-1 if self.titleColor>0 else self.titleColor
@@ -84,10 +80,11 @@ class SplashFrame(BasicFrame):
         self.canvas.delete(self.title)
         self.title = self.newTitle
 
+        #other animation stuff
         if self.counter >= 300 and self.counter < 450:
             self.a-=1
-            self.canvas.create_line(0, self.a, 800, self.a, width=2, fill="#add8e6")
-            self.canvas.create_line(0, 500-self.a, 800, 500-self.a, width=2, fill="#add8e6")
+            self.canvas.create_line(0, self.a, 800, self.a, width=2, fill="#5294E2")
+            self.canvas.create_line(0, 500-self.a, 800, 500-self.a, width=2, fill="#5294E2")
         elif self.counter >= 600 and self.counter < 700:
             self.m+=5
             self.newRect = self.canvas.create_rectangle(0, self.m, 800, 0, outline="#f5f6f7", fill="#f5f6f7")
@@ -99,6 +96,7 @@ class SplashFrame(BasicFrame):
         else:
             self.master.after(5, self.run_animation)
         pass
+
     def show_window(self):
         self.pack(side="top", fill="both", ipadx=30, ipady=30, expand=True)
         pass
@@ -118,18 +116,62 @@ class MainFrame(BasicFrame):
 
     def get_file_location(self):
         filedialog.askopenfilename(filetypes=[("Audio files", ".wav")])
+        self.hide_window()
+        self.parent.loadFrame.show_window()
+        self.parent.loadFrame.run()
 
     def show_window(self):
         self.pack(side="top", fill="both", ipadx=30, ipady=30, expand=True)
         pass
 
 # Loading while waiting for backend to work
+# holds canvas that draws loading bar
 class LoadingFrame(BasicFrame):
-    def create_widgets(self):
+    def __init__(self, master, parent):
+        super().__init__(master, parent)
+        self.animation_running = False
+        self.sine_increment = math.pi/160
         pass
 
+    def create_widgets(self):
+        self.canvas = tk.Canvas(self, width=250, height=200)
+        self.canvas.pack(expand=True)
+        pass
+
+    def reset_animation(self):
+        self.counter = -math.pi/2
+        self.lines = [0]*7
+        self.sine_values = [0]*7
+        pass
+
+    def run_animation(self):
+        self.counter = self.counter+self.sine_increment if self.counter<(3*math.pi)/2 else -math.pi/2
+
+        for i in range(7):
+            self.canvas.delete(self.lines[i])
+            line_color = 132*math.sin(self.counter+(math.pi*i/12))
+            line_color = line_color if line_color>0 else 0
+            hex_color = rgb_to_hex(int(255-line_color), int(255-(85/132*line_color)), int(255-(31/132*line_color)))
+            self.sine_values[i] = 45*math.sin(self.counter+(math.pi*i/12))
+            self.sine_values[i] = self.sine_values[i] if self.sine_values[i]>0 else 0
+            self.lines[i] = self.canvas.create_line(20+(35*i), 45-self.sine_values[i],
+                                                       20+(35*i), 45+self.sine_values[i],
+                                                       width=20, fill=hex_color)
+        if self.animation_running:
+            self.master.after(10, self.run_animation)
+        pass
+
+    def run(self):
+        self.animation_running = True
+        self.reset_animation()
+        self.run_animation()
+        self.master.after(5, self.run_animation)
+        pass
+    def stop(self):
+        self.animation_running = False
+        pass
     def show_window(self):
-        self.pack(side="top", fill="both", ipadx=30, ipady=30, expand=True)
+        self.pack(expand=True)
         pass
 
 # Screen to show what happened and stuff
@@ -170,6 +212,7 @@ class MainApp(object):
         self.splashFrame = SplashFrame(self.root, self)
         self.mainFrame = MainFrame(self.root, self)
         self.notesFrame = NotesFrame(self.root, self)
+        self.loadFrame = LoadingFrame(self.root, self)
 
         self.splashFrame.show_window()
         self.splashFrame.reset_animation()

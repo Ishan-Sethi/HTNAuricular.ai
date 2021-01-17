@@ -9,11 +9,15 @@ import fileManager as fm
 from fileManager import *
 
 # helper to turn rgb to hex
-def rbg_to_hex(r,g,b):
+def rgb_to_hex(r,g,b):
     return "#" + format(r,'02x') + format(g,'02x') + format(b,'02x')
 # grayscale color to hex
 def mono_to_hex(m):
     return "#" + format(m,'02x') + format(m,'02x') + format(m,'02x')
+# smooth interpolation
+def cosineInterpolate(y1, y2, mu):
+   mu2 = (1-math.cos(mu*3.14)) / 2;
+   return (y1*(1-mu2) + y2*mu2);
 
 # Class to extend when making new frames for MainApp
 class BasicFrame(ttk.Frame):
@@ -46,10 +50,15 @@ class SplashFrame(BasicFrame):
         self.counter = 0 #delta but never changes
         self.x, self.y, self.fontsize, self.titleColor = 400, 250, 45, 255
         self.a, self.m = 500, 0
-        self.sinx, self.siny = 0, 0
-        self.xspeed, self.yspeed = 1, 1 #movement variable x and y
+
+        self.sinx, self.siny, self.index = 0, 0, 0
+        self.randompoints = []
+        self.randompoints.append(0)
+        for i in range(100):
+            self.randompoints.append(random.randint(0, 50))
 
         self.title = self.canvas.create_text(self.x, self.y, font=("TkMenuFont",self.fontsize), text="Auricular.AI", fill='#FFFFFF')
+        self.oldRect = self.canvas.create_rectangle(0, self.m, 800, 0, outline="#f5f6f7", fill="#f5f6f7")
 
         print("function has run")
         pass
@@ -58,25 +67,33 @@ class SplashFrame(BasicFrame):
         print(self.counter)
 
         #Sinusoidal wave drawing
-        #self.sinx+=3
-        #self.siny+=20*math.sin(self.sinx)
-        #canvas.create_line(self.sinx, self.siny+400, self.sin+3, self.siny+400, width = 50)
-
         self.counter+=1
+
+        if self.counter % 50 == 0:
+            self.index+=1
+
+        if self.counter%2==0:
+            self.sinx+=2
+            self.siny = cosineInterpolate(self.randompoints[self.index], self.randompoints[self.index+1], (self.counter%50)/50)*math.sin(self.sinx)
+            self.canvas.create_line(self.sinx, 250-self.siny, self.sinx, 250+self.siny, width=2, fill=rgb_to_hex(160,160,255))
+
         if self.counter < 300:
             self.fontsize = self.fontsize+0.25  if self.fontsize<75 else self.fontsize
             self.titleColor = self.titleColor-1 if self.titleColor>0 else self.titleColor
-            self.newTitle = self.canvas.create_text(self.x, self.y, font=("TkMenuFont",int(self.fontsize)), text="Auricular.AI", fill=mono_to_hex(self.titleColor))
-            self.canvas.delete(self.title)
-            self.title = self.newTitle
-        elif self.counter >= 300 and self.counter < 450:
+        self.newTitle = self.canvas.create_text(self.x, self.y, font=("TkMenuFont",int(self.fontsize)), text="Auricular.AI", fill=mono_to_hex(self.titleColor))
+        self.canvas.delete(self.title)
+        self.title = self.newTitle
+
+        if self.counter >= 300 and self.counter < 450:
             self.a-=1
-            self.canvas.create_rectangle(-10, self.a, 800, 500, outline = "#add8e6", fill = "#add8e6")
-            self.canvas.create_rectangle(-10, 500-self.a, 800, 0, outline = "#add8e6", fill = "#add8e6")
-        elif self.counter >= 450 and self.counter < 550:
+            self.canvas.create_line(0, self.a, 800, self.a, width=2, fill="#add8e6")
+            self.canvas.create_line(0, 500-self.a, 800, 500-self.a, width=2, fill="#add8e6")
+        elif self.counter >= 600 and self.counter < 700:
             self.m+=5
-            self.canvas.create_rectangle(-10, self.m, 810, 0, outline = "#f5f6f7", fill = "#f5f6f7")
-        if self.counter == 550:
+            self.newRect = self.canvas.create_rectangle(0, self.m, 800, 0, outline="#f5f6f7", fill="#f5f6f7")
+            self.canvas.delete(self.oldRect)
+            self.oldRect = self.newRect
+        if self.counter == 700:
             self.hide_window()
             self.parent.mainFrame.show_window()
         else:

@@ -1,9 +1,5 @@
 import json
 from wit import Wit
-import datetime
-
-def pretty_print(response_json: json):
-    print(json.dumps(response_json, indent=4, sort_keys=True))
 
 def sendResponses(responses):
     print("Sending transcripts to wit.ai")

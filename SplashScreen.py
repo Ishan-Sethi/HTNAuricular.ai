@@ -37,10 +37,12 @@ while True:
         counter+=1
         canvas.create_rectangle(-10, a, 800, a + 300, outline = "#add8e6", fill = "#add8e6")
         a-=1
-    elif counter >= 590:
+    elif counter >= 590 and counter <= 692:
         canvas.create_rectangle(-10, m, 810, m+500, outline = "#059DC0", fill = "#059DC0")
         m+=5
         counter+=1
+    elif counter == 693:
+        #transition to main Frame
 
 
     tk.update() #update position of line

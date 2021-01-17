@@ -2,10 +2,9 @@ from google.cloud import speech
 from google.cloud import storage
 from google.oauth2 import service_account
 from pydub import AudioSegment
-import io
-import os
 import wave
 credentials = service_account.Credentials.from_service_account_file("C:/Users/Ishan/Downloads/auricular-ai-2edefb9bcdf3.json") # change to credentials
+
 def stereoToMono(fileName):
     audio = AudioSegment.from_wav(fileName)
     audio = audio.set_channels(1)
@@ -37,11 +36,13 @@ def sendAudio(fileName):
     transcript = ''
     client = speech.SpeechClient(credentials=credentials)
     audio = speech.RecognitionAudio(uri=gcs_uri)
-    config = speech.RecognitionConfig(sample_rate_hertz=frameRate, language_code='en-US')
+    config = speech.RecognitionConfig(sample_rate_hertz=frameRate, language_code='en-US', enable_automatic_punctuation=True,)
     operation = client.long_running_recognize(config=config, audio=audio)
 
     print("Waiting for operation to complete...")
-    response = operation.result(timeout=10000)
+    response = operation.result(timeout=90)
     for result in response.results:
-        print("Transcript: {}".format(result.alternatives[0].transcript))
-        print("Confidence: {}".format(result.alternatives[0].confidence))
+        # The first alternative is the most likely one for this portion.
+        #print(u"Transcript: {}".format(result.alternatives[0].transcript))
+        #print("Confidence: {}".format(result.alternatives[0].confidence))
+    return response

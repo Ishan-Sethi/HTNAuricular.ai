@@ -13,7 +13,6 @@ def sendResponses(responses):
                 data.append(response)
     return data
 
-<<<<<<< Updated upstream
 def postJsonData(data):
     intent_only = []
     for sentence in data:
@@ -29,5 +28,3 @@ def postJsonData(data):
                 entities['value'] = entity['value']
         final_data.append(entities)
     return final_data
-=======
->>>>>>> Stashed changes

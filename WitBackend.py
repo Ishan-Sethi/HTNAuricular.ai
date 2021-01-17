@@ -1,6 +1,5 @@
 import requests
 import json
-import AudioUpload
 from wit import Wit
 
 def pretty_print(response_json: json):
@@ -16,6 +15,9 @@ def sendResponses(responses):
             data.append(str(response))
     return data
 
-responses = AudioUpload.sendAudio("./test audio/Recording_2.wav")
-print (responses)
-print(sendResponses(responses))
+def postJsonData(data):
+    intent_only = []
+    for sentence in data:
+        if sentence['intents']:
+            intent_only.append(sentence)
+    return intent_only

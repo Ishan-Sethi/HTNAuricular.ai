@@ -20,4 +20,13 @@ def postJsonData(data):
     for sentence in data:
         if sentence['intents']:
             intent_only.append(sentence)
-    return intent_only
+    final_data, entities = {}, {}
+    for intent in intent_only:
+        entities = {}
+        for entity in intent['entities']:
+            entities['body'] = entity['body']
+            entities['confidence'] = entity['confidence']
+            if entity['role'] == "datetime":
+                entities['value'] = entity['value']
+        final_data.append(entities)
+    return final_data

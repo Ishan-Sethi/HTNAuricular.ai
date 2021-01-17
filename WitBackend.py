@@ -11,20 +11,20 @@ def sendResponses(responses):
             if len(phrase) <= 280:
                 response = client.message(phrase)
                 data.append(response)
-    return data
-
-def postJsonData(data):
     intent_only = []
     for sentence in data:
         if sentence['intents']:
-            intent_only.append(sentence)
-    final_data, entities = {}, {}
-    for intent in intent_only:
-        entities = {}
-        for entity in intent['entities']:
-            entities['body'] = entity['body']
-            entities['confidence'] = entity['confidence']
-            if entity['role'] == "datetime":
-                entities['value'] = entity['value']
-        final_data.append(entities)
-    return final_data
+            text = sentence['text']
+            aricule = []
+            dates = []
+            if 'htn_auricule:htn_auricule' in sentence['entities']:
+                for entities in sentence['entities']['htn_auricule:htn_auricule']:
+                    ariculi = dict(body=entities['body'], confidence=entities['confidence'])
+                    aricule.append(ariculi)
+            if 'wit$datetime:datetime' in sentence['entities']:
+                for entities in sentence['entities']['wit$datetime:datetime']:
+                    date = dict(body=entities['body'], confidence=entities['confidence'], value=entities['value'])
+                    dates.append(date)
+            final_data = [text, aricule, dates]
+            intent_only.append(json.dumps(final_data))
+    return intent_only

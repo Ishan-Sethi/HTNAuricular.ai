@@ -34,14 +34,14 @@ class BackendThread(threading.Thread):
         self.file_name = file_name
         pass
     def run(self):
-        self.queue.put("Loading 1/4: Uploading audio to Google Cloud")
+        self.queue.put("1/4:Uploading audio to Google Cloud")
         AudioUpload.bucketUpload(self.file_name)
-        self.queue.put("Loading 2/4: Transcripting audio to text")
+        self.queue.put("2/4:Transcripting audio to text")
         transcripts = AudioUpload.sendAudio(self.file_name)
-        self.queue.put("Loading 3/4: Deleting audio from the cloud")
+        self.queue.put("3/4:Deleting audio from the cloud")
         AudioUpload.bucketDelete(self.file_name)
-        self.queue.put("Loading 4/4: Uploading transcripts to wit.ai")
-        WitBackend.sendResponses(transcripts)
+        self.queue.put("4/4:Uploading transcripts to wit.ai")
+        fm.writeFile(WitBackend.sendResponses(transcripts))
         self.queue.put("Finished")
         pass
 
@@ -173,7 +173,7 @@ class LoadingFrame(BasicFrame):
         self.lines = [0]*7
         self.sine_values = [0]*7
         self.titleText = ""
-        self.oldTitle = self.canvas.create_text(125, 150, anchor="center", font=("TkMenuFont", 24), text=self.titleText, fill="#5294E2")
+        self.oldTitle = self.canvas.create_text(275, 150, anchor="center", font=("TkMenuFont", 18), text=self.titleText, fill="#5294E2")
         pass
 
     def run_animation(self):
@@ -190,7 +190,7 @@ class LoadingFrame(BasicFrame):
                                                        170+(35*i), 45+self.sine_values[i],
                                                        width=20, fill=hex_color)
 
-        self.newTitle = self.canvas.create_text(125, 150, anchor="center", font=("TkMenuFont", 24), text=self.titleText, fill="#5294E2")
+        self.newTitle = self.canvas.create_text(275, 150, anchor="center", font=("TkMenuFont", 18), text=self.titleText, fill="#5294E2")
         self.canvas.delete(self.oldTitle)
         self.oldTitle = self.newTitle
 

@@ -1,10 +1,15 @@
 import random
+import sys
+import threading
 import time
 import math
+import queue
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog
 from ttkthemes import ThemedStyle
+import AudioUpload
+import WitBackend
 import FileManager as fm
 from FileManager import *
 
@@ -15,9 +20,30 @@ def rgb_to_hex(r,g,b):
 def mono_to_hex(m):
     return "#" + format(m,'02x') + format(m,'02x') + format(m,'02x')
 # smooth interpolation
-def cosineInterpolate(y1, y2, mu):
-   mu2 = (1-math.cos(mu*3.14)) / 2;
-   return (y1*(1-mu2) + y2*mu2);
+def cosine_interpolate(y1, y2, mu):
+   mu2 = (1-math.cos(mu*3.14)) / 2
+   return (y1*(1-mu2) + y2*mu2)
+
+class BackendThread(threading.Thread):
+    def __init__(self, queue):
+        threading.Thread.__init__(self)
+        self.queue = queue
+        self.file_name = ''
+        pass
+    def set_file_name(self, file_name):
+        self.file_name = file_name
+        pass
+    def run(self):
+        self.queue.put("Loading 1/4: Uploading audio to Google Cloud")
+        AudioUpload.bucketUpload(self.file_name)
+        self.queue.put("Loading 2/4: Transcripting audio to text")
+        transcripts = AudioUpload.sendAudio(self.file_name)
+        self.queue.put("Loading 3/4: Deleting audio from the cloud")
+        AudioUpload.bucketDelete(self.file_name)
+        self.queue.put("Loading 4/4: Uploading transcripts to wit.ai")
+        WitBackend.sendResponses(transcripts)
+        self.queue.put("Finished")
+        pass
 
 # Class to extend when making new frames for MainApp
 class BasicFrame(ttk.Frame):
@@ -69,7 +95,7 @@ class SplashFrame(BasicFrame):
             self.index+=1
         if self.counter%2==0:
             self.sinx+=2
-            self.siny = cosineInterpolate(self.randompoints[self.index], self.randompoints[self.index+1], (self.counter%50)/50)*math.sin(self.sinx)
+            self.siny = cosine_interpolate(self.randompoints[self.index], self.randompoints[self.index+1], (self.counter%50)/50)*math.sin(self.sinx)
             self.canvas.create_line(self.sinx, 250-self.siny, self.sinx, 250+self.siny, width=2, fill="#CFD6E6")
 
         #Main text drawing
@@ -103,6 +129,7 @@ class SplashFrame(BasicFrame):
 
 # Add cleaner visuals?
 class MainFrame(BasicFrame):
+
     def create_widgets(self):
         self.heading = ttk.Label(self, text="Auricular.ai", style="heading.TLabel")
         self.heading.pack(side="top", pady=(80,30))
@@ -115,10 +142,14 @@ class MainFrame(BasicFrame):
         pass
 
     def get_file_location(self):
-        filedialog.askopenfilename(filetypes=[("Audio files", ".wav")])
+        file_name = filedialog.askopenfilename(filetypes=[("Audio files", ".wav")])
         self.hide_window()
         self.parent.loadFrame.show_window()
         self.parent.loadFrame.run()
+        self.parent.thread.set_file_name(file_name)
+        self.parent.thread.start()
+        self.master.after(100, self.parent.loadFrame.process_queue)
+        pass
 
     def show_window(self):
         self.pack(side="top", fill="both", ipadx=30, ipady=30, expand=True)
@@ -129,12 +160,11 @@ class MainFrame(BasicFrame):
 class LoadingFrame(BasicFrame):
     def __init__(self, master, parent):
         super().__init__(master, parent)
-        self.animation_running = False
         self.sine_increment = math.pi/160
         pass
 
     def create_widgets(self):
-        self.canvas = tk.Canvas(self, width=250, height=200)
+        self.canvas = tk.Canvas(self, width=550, height=200)
         self.canvas.pack(expand=True)
         pass
 
@@ -142,6 +172,8 @@ class LoadingFrame(BasicFrame):
         self.counter = -math.pi/2
         self.lines = [0]*7
         self.sine_values = [0]*7
+        self.titleText = ""
+        self.oldTitle = self.canvas.create_text(125, 150, anchor="center", font=("TkMenuFont", 24), text=self.titleText, fill="#5294E2")
         pass
 
     def run_animation(self):
@@ -154,21 +186,33 @@ class LoadingFrame(BasicFrame):
             hex_color = rgb_to_hex(int(255-line_color), int(255-(85/132*line_color)), int(255-(31/132*line_color)))
             self.sine_values[i] = 45*math.sin(self.counter+(math.pi*i/12))
             self.sine_values[i] = self.sine_values[i] if self.sine_values[i]>0 else 0
-            self.lines[i] = self.canvas.create_line(20+(35*i), 45-self.sine_values[i],
-                                                       20+(35*i), 45+self.sine_values[i],
+            self.lines[i] = self.canvas.create_line(170+(35*i), 45-self.sine_values[i],
+                                                       170+(35*i), 45+self.sine_values[i],
                                                        width=20, fill=hex_color)
-        if self.animation_running:
+
+        self.newTitle = self.canvas.create_text(125, 150, anchor="center", font=("TkMenuFont", 24), text=self.titleText, fill="#5294E2")
+        self.canvas.delete(self.oldTitle)
+        self.oldTitle = self.newTitle
+
+        if self.parent.thread.is_alive():
             self.master.after(10, self.run_animation)
         pass
 
+    def process_queue(self):
+        if not self.parent.queue.empty():
+            msg = self.parent.queue.get(0)
+            if msg == "Finished":
+                self.parent.thread.join()
+            else:
+                self.titleText = msg
+
+        if self.parent.thread.is_alive():
+            self.master.after(100, self.process_queue)
+        pass
     def run(self):
-        self.animation_running = True
         self.reset_animation()
         self.run_animation()
         self.master.after(5, self.run_animation)
-        pass
-    def stop(self):
-        self.animation_running = False
         pass
     def show_window(self):
         self.pack(expand=True)
@@ -197,6 +241,9 @@ class NotesFrame(BasicFrame):
 # Main Window Class
 class MainApp(object):
     def __init__(self):
+        self.queue = queue.Queue()
+        self.thread = BackendThread(self.queue)
+
         self.root = tk.Tk()
         self.root.title("Auricular.ai")
         self.root.geometry("800x500")

@@ -1,20 +1,19 @@
-import requests
 import json
 from wit import Wit
 
-def pretty_print(response_json: json):
-    print(json.dumps(response_json, indent=4, sort_keys=True))
-
 def sendResponses(responses):
+    print("Sending transcripts to wit.ai")
     client = Wit('S5LPGE54WVG6FQ4MWM5YZXVUCY6JDVGB')
     data = []
     for sentence in responses:
         for phrase in sentence:
-            response = client.message(phrase)
-            pretty_print(response)
-            data.append(str(response))
+            print(phrase)
+            if len(phrase) <= 280:
+                response = client.message(phrase)
+                data.append(response)
     return data
 
+<<<<<<< Updated upstream
 def postJsonData(data):
     intent_only = []
     for sentence in data:
@@ -30,3 +29,5 @@ def postJsonData(data):
                 entities['value'] = entity['value']
         final_data.append(entities)
     return final_data
+=======
+>>>>>>> Stashed changes

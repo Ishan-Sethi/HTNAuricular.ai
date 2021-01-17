@@ -6,8 +6,6 @@
       <change beforePath="$PROJECT_DIR$/AudioUpload.py" beforeDir="false" afterPath="$PROJECT_DIR$/AudioUpload.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/MainApp.py" beforeDir="false" afterPath="$PROJECT_DIR$/MainApp.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/WitBackend.py" beforeDir="false" afterPath="$PROJECT_DIR$/WitBackend.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test audio/2021-01-17 00-03-18.wav" beforeDir="false" afterPath="$PROJECT_DIR$/test audio/2021-01-17 00-03-18.wav" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test audio/2021-01-17 00-14-01.wav" beforeDir="false" afterPath="$PROJECT_DIR$/test audio/2021-01-17 00-14-01.wav" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,6 +42,7 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="restartRequiresConfirmation" value="false" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">

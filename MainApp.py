@@ -41,7 +41,7 @@ class BackendThread(threading.Thread):
         self.queue.put("3/4:Deleting audio from the cloud")
         AudioUpload.bucketDelete(self.file_name)
         self.queue.put("4/4:Uploading transcripts to wit.ai")
-        fm.writeFile(WitBackend.sendResponses(transcripts))
+        WitBackend.sendResponses(transcripts)
         self.queue.put("Finished")
         pass
 

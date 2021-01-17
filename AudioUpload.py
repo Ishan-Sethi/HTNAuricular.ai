@@ -41,8 +41,9 @@ def sendAudio(fileName):
 
     print("Waiting for operation to complete...")
     response = operation.result(timeout=90)
+    data = []
     for result in response.results:
-        # The first alternative is the most likely one for this portion.
-        #print(u"Transcript: {}".format(result.alternatives[0].transcript))
-        #print("Confidence: {}".format(result.alternatives[0].confidence))
-    return response
+        print(u"Transcript: {}".format(result.alternatives[0].transcript))
+        print("Confidence: {}".format(result.alternatives[0].confidence))
+        data = (list(filter(None,"{}".format(result.alternatives[0].transcript).split("."))))
+    return data

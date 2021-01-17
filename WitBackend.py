@@ -1,17 +1,18 @@
 import requests
 import json
 import AudioUpload
+from wit import Wit
+
+
 def sendResponses(responses):
-    endpoint = "https://api.wit.ai/message"
-    accessToken = "C56EAX6MPKJ5NDESA5RZ5JIUPGC5NDZP"
+    client = Wit('C56EAX6MPKJ5NDESA5RZ5JIUPGC5NDZP')
     data = []
-    headers = {'authorization': 'Bearer ' + accessToken}
-    for result in responses.results:
-        if result.alternatives[0].confidence > 90:
-            response = requests.get(endpoint % result.alternatives[0].transcript, headers=headers)
-            data.append(json.load(response.content))
+    for result in responses:
+        response = client.message(result)
+        print(str(response))
+        data.append(str(response))
     return data
 
 responses = AudioUpload.sendAudio("Recording_2.wav")
-
+print (responses)
 print(sendResponses(responses))

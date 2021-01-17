@@ -7,7 +7,7 @@ def pretty_print(response_json: json):
     print(json.dumps(response_json, indent=4, sort_keys=True))
 
 def sendResponses(responses):
-    client = Wit('C56EAX6MPKJ5NDESA5RZ5JIUPGC5NDZP')
+    client = Wit('S5LPGE54WVG6FQ4MWM5YZXVUCY6JDVGB')
     data = []
     for sentence in responses:
         for phrase in sentence:
@@ -16,6 +16,6 @@ def sendResponses(responses):
             data.append(str(response))
     return data
 
-responses = AudioUpload.sendAudio("./test audio/aryan is teacher 1.wav")
+responses = AudioUpload.sendAudio("./test audio/Recording_2.wav")
 print (responses)
 print(sendResponses(responses))

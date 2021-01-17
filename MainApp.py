@@ -8,6 +8,13 @@ from ttkthemes import ThemedStyle
 import fileManager as fm
 from fileManager import *
 
+# helper to turn rgb to hex
+def rbg_to_hex(r,g,b):
+    return "#" + format(r,'02x') + format(g,'02x') + format(b,'02x')
+# grayscale color to hex
+def mono_to_hex(m):
+    return "#" + format(m,'02x') + format(m,'02x') + format(m,'02x')
+
 # Class to extend when making new frames for MainApp
 class BasicFrame(ttk.Frame):
     def __init__(self, master, parent):
@@ -26,7 +33,7 @@ class BasicFrame(ttk.Frame):
     def show_window(self):
         raise NotImplementedError("Implement this show_window(), bumboclat! %s" %(self.__class__.__name__))
 
-# Aryan complete this
+# Splashscreen for program open
 class SplashFrame(BasicFrame):
 
     def create_widgets(self):
@@ -34,26 +41,42 @@ class SplashFrame(BasicFrame):
         self.canvas.pack()
         print("function has run create")
         pass
+
     def reset_animation(self):
         self.counter = 0 #delta but never changes
-        self.x, self.y, self.a, self.m = 145, -110, 550, -510
+        self.x, self.y, self.fontsize, self.titleColor = 400, 250, 45, 255
+        self.a, self.m = 500, 0
+        self.sinx, self.siny = 0, 0
         self.xspeed, self.yspeed = 1, 1 #movement variable x and y
-        self.title = self.canvas.create_text(self.x, self.y, anchor='w', font=("TkMenuFont",75), text="Auricular.AI")
+
+        self.title = self.canvas.create_text(self.x, self.y, font=("TkMenuFont",self.fontsize), text="Auricular.AI", fill='#FFFFFF')
+
         print("function has run")
         pass
+
     def run_animation(self):
         print(self.counter)
+
+        #Sinusoidal wave drawing
+        #self.sinx+=3
+        #self.siny+=20*math.sin(self.sinx)
+        #canvas.create_line(self.sinx, self.siny+400, self.sin+3, self.siny+400, width = 50)
+
         self.counter+=1
-        if self.counter < 324:
-            self.y+=1
-            self.canvas.move(self.title,0,self.yspeed) #Adds to the coordinates of line
-        elif self.counter >= 324 and self.counter <= 590:
+        if self.counter < 300:
+            self.fontsize = self.fontsize+0.25  if self.fontsize<75 else self.fontsize
+            self.titleColor = self.titleColor-1 if self.titleColor>0 else self.titleColor
+            self.newTitle = self.canvas.create_text(self.x, self.y, font=("TkMenuFont",int(self.fontsize)), text="Auricular.AI", fill=mono_to_hex(self.titleColor))
+            self.canvas.delete(self.title)
+            self.title = self.newTitle
+        elif self.counter >= 300 and self.counter < 450:
             self.a-=1
-            self.canvas.create_rectangle(-10, self.a, 800, self.a+300, outline = "#add8e6", fill = "#add8e6")
-        elif self.counter >= 590 and self.counter <= 692:
+            self.canvas.create_rectangle(-10, self.a, 800, 500, outline = "#add8e6", fill = "#add8e6")
+            self.canvas.create_rectangle(-10, 500-self.a, 800, 0, outline = "#add8e6", fill = "#add8e6")
+        elif self.counter >= 450 and self.counter < 550:
             self.m+=5
-            self.canvas.create_rectangle(-10, self.m, 810, self.m+500, outline = "#f5f6f7", fill = "#f5f6f7")
-        if self.counter == 693:
+            self.canvas.create_rectangle(-10, self.m, 810, 0, outline = "#f5f6f7", fill = "#f5f6f7")
+        if self.counter == 550:
             self.hide_window()
             self.parent.mainFrame.show_window()
         else:
@@ -67,17 +90,17 @@ class SplashFrame(BasicFrame):
 class MainFrame(BasicFrame):
     def create_widgets(self):
         self.heading = ttk.Label(self, text="Auricular.ai", style="heading.TLabel")
-        self.heading.pack(side="top", pady=(0,50), ipady=(20,0))
-        self.record = ttk.Button(self, text="Process Recording", width=25, command=self.get_file_location)
+        self.heading.pack(side="top", pady=(80,30))
+        self.record = ttk.Button(self, text="Process Recording", width=25, style="main.TButton", command=self.get_file_location)
         self.record.pack(side="top", pady=(50,0))
-        self.note = ttk.Button(self, text="Notes", width=25, command=lambda:[self.hide_window(),self.parent.notesFrame.show_window()])
+        self.note = ttk.Button(self, text="Notes", width=25, style="main.TButton", command=lambda:[self.hide_window(),self.parent.notesFrame.show_window()])
         self.note.pack(side="top", pady=(30,0))
-        self.quit = ttk.Button(self, text="Quit Program", width=25, command=self.parent.root.destroy)
+        self.quit = ttk.Button(self, text="Quit Program", width=25, style="main.TButton", command=self.parent.root.destroy)
         self.quit.pack(side="top", pady=(30,0))
         pass
 
     def get_file_location(self):
-        print(filedialog.askopenfilename(filetypes=[("Image files", ".png .jpg .jpeg")]))
+        filedialog.askopenfilename(filetypes=[("Audio files", ".wav")])
 
     def show_window(self):
         self.pack(side="top", fill="both", ipadx=30, ipady=30, expand=True)
@@ -124,7 +147,8 @@ class MainApp(object):
         self.style.set_theme("arc")
 
         self.ttkstyle = ttk.Style()
-        self.ttkstyle.configure('heading.TLabel', font='TkDefaultFont 32')
+        self.ttkstyle.configure('heading.TLabel', font='TkDefaultFont 48')
+        self.ttkstyle.configure('main.TButton', font='TkMenuFont 18')
 
         self.splashFrame = SplashFrame(self.root, self)
         self.mainFrame = MainFrame(self.root, self)

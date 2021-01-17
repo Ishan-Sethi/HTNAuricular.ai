@@ -45,5 +45,5 @@ def sendAudio(fileName):
     for result in response.results:
         print(u"Transcript: {}".format(result.alternatives[0].transcript))
         print("Confidence: {}".format(result.alternatives[0].confidence))
-        data = (list(filter(None,"{}".format(result.alternatives[0].transcript).split("."))))
+        data.append((list(filter(None,"{}".format(result.alternatives[0].transcript).split(".")))))
     return data

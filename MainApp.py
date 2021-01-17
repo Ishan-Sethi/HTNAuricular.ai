@@ -221,10 +221,25 @@ class LoadingFrame(BasicFrame):
 # Screen to show what happened and stuff
 class OutputFrame(BasicFrame):
     def create_widgets(self):
-        pass
+        self.canvas = tk.Canvas(self, borderwidth=0, background="#f5f6f7")
+        self.scrollable_frame = ttk.Frame(self.canvas, borderwidth=0)
+        self.scrollbar = ttk.Scrollbar(self, orient='vertical', command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
+        for i in range(30):
+            self.button1 = ttk.Button(self.scrollable_frame, text="bruh", width=20)
+            self.button1.pack(ipady=30)
+
+        self.scrollbar.pack(side="right", fill="y")
+        self.canvas.pack(side="left", expand=True, fill="both")
+        self.canvas.create_window((4, 4), window=self.scrollable_frame, anchor="nw")
+        self.scrollable_frame.bind("<Configure>", self.onFrameConfigure)
+        pass
+    def onFrameConfigure(self, event):
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        pass
     def show_window(self):
-        self.pack(side="top", fill="both", ipadx=30, ipady=30, expand=True)
+        self.pack(side="top", fill="both", padx=10, pady=10, expand=True)
         pass
 
 # Show all saved notes and open em up
@@ -260,10 +275,13 @@ class MainApp(object):
         self.mainFrame = MainFrame(self.root, self)
         self.notesFrame = NotesFrame(self.root, self)
         self.loadFrame = LoadingFrame(self.root, self)
+        self.outputFrame = OutputFrame(self.root, self)
 
-        self.splashFrame.show_window()
-        self.splashFrame.reset_animation()
-        self.splashFrame.run_animation()
+        self.outputFrame.show_window()
+
+        #self.splashFrame.show_window()
+        #self.splashFrame.reset_animation()
+        #self.splashFrame.run_animation()
         pass
 
 mainApp = MainApp()
